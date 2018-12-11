@@ -1,13 +1,13 @@
-package nz.co.bottech
+package nz.co.bottech.bff
 
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
 import scala.annotation.tailrec
-import scala.sys.process._
-import scala.util.Try
 import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedSet
+import scala.sys.process._
+import scala.util.Try
 
 object BSDFileTypeClassifier extends FileTypeClassifier {
 
@@ -119,4 +119,5 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
       FileType(category, name, details)
     }
   }
+
 }

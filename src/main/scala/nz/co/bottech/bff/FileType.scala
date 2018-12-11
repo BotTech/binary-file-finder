@@ -1,4 +1,4 @@
-package nz.co.bottech
+package nz.co.bottech.bff
 
 final case class FileType(category: FileCategory, name: String, details: Option[String])
 

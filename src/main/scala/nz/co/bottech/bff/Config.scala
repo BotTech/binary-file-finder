@@ -1,4 +1,4 @@
-package nz.co.bottech
+package nz.co.bottech.bff
 
 import java.nio.file.{Path, Paths}
 import java.util.regex.Pattern

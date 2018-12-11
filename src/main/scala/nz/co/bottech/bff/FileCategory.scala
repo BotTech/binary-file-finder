@@ -1,4 +1,4 @@
-package nz.co.bottech
+package nz.co.bottech.bff
 
 sealed trait FileCategory
 
