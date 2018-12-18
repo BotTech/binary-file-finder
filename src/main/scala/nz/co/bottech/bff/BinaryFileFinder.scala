@@ -3,6 +3,8 @@ package nz.co.bottech.bff
 import java.nio.file.{Files, Path}
 import java.util.regex.Pattern
 
+import nz.co.bottech.bff.report.ConcurrentFileReporter
+
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -13,11 +15,16 @@ object BinaryFileFinder extends App {
 
   private def run(config: Config): Unit = {
     val classifier = BSDFileTypeClassifier
-    val reporter = new ConcurrentFileReporter(classifier)
+    val reporter = new ConcurrentFileReporter(classifier, config.fileReportConfig)
     val visitor = new FileTypeVisitor(excludeMatching(config), reporter)
     Files.walkFileTree(config.dir, visitor)
-    val report = Await.result(reporter.report, Duration.Inf)
-    report.groupByType.sort.printTypes()
+    val fileReport = Await.result(reporter.report, Duration.Inf)
+    val report = if (config.groupByTypes) {
+      fileReport.groupByType(config.typeReportConfig)
+    } else {
+      fileReport
+    }
+    report.print()
   }
 
   private def excludeMatching(config: Config) = {

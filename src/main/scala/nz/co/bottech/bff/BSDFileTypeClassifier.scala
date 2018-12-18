@@ -16,7 +16,7 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
 
   private final val BinaryPatternsHeader = "Binary patterns:"
   private final val TextPatternsHeader = "Text patterns:"
-  private final val PatternRegex = """Strength = (\d+)@(\d+): (.*) \[(.*)]""".r
+  private final val PatternRegex = """Strength = +(\d+)@(\d+): (.*) \[(.*)]""".r
 
   // TODO: Use a memory sensitive cache.
   private val lineCache = new ConcurrentHashMap[String, FileType]().asScala
@@ -49,7 +49,7 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
 
     private final case class FilePattern(binary: Boolean,
                                          strength: Int,
-                                         offset: Int,
+                                         offset: Long,
                                          typeFormat: String,
                                          mimeType: Option[String]) {
 
@@ -104,7 +104,8 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
             case TextPatternsHeader => loop(tail, binary = false, acc)
             case PatternRegex(strength, offset, typeFormat, mimeType) =>
               val maybeMimeType = Some(mimeType).filter(_.nonEmpty)
-              val pattern = FilePattern(binary, strength.toInt, offset.toInt, typeFormat, maybeMimeType)
+              val boundedStrength = Try(strength.toInt).getOrElse(Int.MaxValue)
+              val pattern = FilePattern(binary, boundedStrength, offset.toLong, typeFormat, maybeMimeType)
               loop(tail, binary, acc + pattern)
             case _ => loop(tail, binary, acc)
           }
