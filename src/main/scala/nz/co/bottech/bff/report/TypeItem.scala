@@ -5,6 +5,8 @@ import nz.co.bottech.bff.report.TypeItem.FormatConfig
 
 final case class TypeItem(fileType: FileType, fileItems: Seq[FileItem]) extends ReportItem {
 
+  override def toString: String = format(FormatConfig())
+
   def format(config: FormatConfig): String = {
     val count = if (config.includeCounts) {
       Seq(s"count = ${fileItems.size}")
@@ -38,7 +40,9 @@ object TypeItem {
                                 printFiles: Boolean,
                                 includeFileSizes: Boolean) {
 
-    def fileFormatConfig: FileItem.FormatConfig = FileItem.FormatConfig(includeSizes = includeFileSizes)
+    def fileFormatConfig: FileItem.FormatConfig = {
+      FileItem.FormatConfig(includeSizes = includeFileSizes, hideTypes = true)
+    }
   }
 
   object FormatConfig {

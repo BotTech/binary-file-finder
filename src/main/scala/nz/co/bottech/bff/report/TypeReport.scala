@@ -1,11 +1,14 @@
 package nz.co.bottech.bff.report
 
+import java.util.regex.Pattern
+
 import nz.co.bottech.bff.report.TypeReport._
 
 class TypeReport(types: Seq[TypeItem], config: ReportConfig) extends Report[TypeItem] {
 
   override def print(): Unit = {
-    val items = Report.maybeSorted(types, config.typeOrder.ordering)
+    val filtered = Report.filterItems(types, config.typeFilters)(_.fileType.toString)
+    val items = Report.sortItems(filtered, config.typeOrder.ordering)
     items.foreach(printItem)
   }
 
@@ -17,7 +20,7 @@ class TypeReport(types: Seq[TypeItem], config: ReportConfig) extends Report[Type
   }
 
   private def printFiles(files: Seq[FileItem]): Unit = {
-    val items = Report.maybeSorted(files, config.fileOrder.ordering)
+    val items = Report.sortItems(files, config.fileOrder.ordering)
     items.foreach(printFile)
   }
 
@@ -29,6 +32,7 @@ class TypeReport(types: Seq[TypeItem], config: ReportConfig) extends Report[Type
 object TypeReport {
 
   final case class ReportConfig(typeFormatConfig: TypeItem.FormatConfig,
+                                typeFilters: Seq[Pattern],
                                 typeOrder: TypeItem.SortOrder,
                                 fileOrder: FileItem.SortOrder)
 

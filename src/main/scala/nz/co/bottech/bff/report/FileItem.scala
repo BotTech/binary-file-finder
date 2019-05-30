@@ -10,23 +10,30 @@ final case class FileItem(file: Path, fileType: FileType) extends ReportItem {
 
   lazy val size: Long = file.toFile.length()
 
+  override def toString: String = format(FormatConfig())
+
   def format(config: FormatConfig): String = {
+    val typeFormat = if (config.hideTypes) {
+      ""
+    } else {
+      s"$fileType: "
+    }
     val sizeFormat = if (config.includeSizes) {
       s" [size = $size]"
     } else {
       ""
     }
-    s"$file$sizeFormat"
+    s"$typeFormat$file$sizeFormat"
   }
 }
 
 object FileItem {
 
-  final case class FormatConfig(includeSizes: Boolean)
+  final case class FormatConfig(includeSizes: Boolean, hideTypes: Boolean)
 
   object FormatConfig {
 
-    def apply(): FormatConfig = FormatConfig(includeSizes = false)
+    def apply(): FormatConfig = FormatConfig(includeSizes = false, hideTypes = false)
   }
 
   sealed trait SortOrder {

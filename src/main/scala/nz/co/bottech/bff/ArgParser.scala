@@ -24,6 +24,18 @@ class ArgParser extends OptionParser[Config]("bff") {
         c.copy(excludeNames = c.excludeNames :+ exclude)
     }
 
+  opt[String]("filter-types")
+    .abbr("f")
+    .valueName("<regex>")
+    .text("Pattern to filter out any results that match. This option may be specified multiple times.")
+    .optional()
+    .unbounded()
+    .action {
+      case (x, c) =>
+        val filter = Pattern.compile(x)
+        c.copy(typeFilters = c.typeFilters :+ filter)
+    }
+
   private val groupTypeOptions: Map[String, TypeItem.FormatConfig => TypeItem.FormatConfig] = Map(
     "c" -> (_.copy(includeCounts = true)),
     "s" -> (_.copy(includeSizes = true)),
@@ -34,7 +46,7 @@ class ArgParser extends OptionParser[Config]("bff") {
   opt[Seq[String]]("group-types")
     .abbr("g")
     .valueName(groupTypeOptions.keys.mkString(","))
-    .text("""Group files into types. Values are; counts ("c"), include sizes ("s") and print files ("f").""")
+    .text("""Group files into types. Values are; counts ("c"), include sizes ("s"), print files ("f"), and print file sizes ("fs").""")
     .validate { x =>
       val invalid = x.toSet -- groupTypeOptions.keys
       if (invalid.isEmpty) {

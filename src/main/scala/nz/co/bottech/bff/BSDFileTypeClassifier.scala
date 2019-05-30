@@ -47,7 +47,7 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
 
   private class FileTypeMatcher(patterns: Seq[String]) {
 
-    private final case class FilePattern(binary: Boolean,
+    private final case class FilePattern(category: FileCategory,
                                          strength: Int,
                                          offset: Long,
                                          typeFormat: String,
@@ -80,43 +80,38 @@ object BSDFileTypeClassifier extends FileTypeClassifier {
 
         loop(nameParts, value)
       }
-
-      def category: FileCategory = {
-        if (binary) {
-          Binary
-        } else {
-          Text
-        }
-      }
     }
 
     private implicit val filePatternOrdering: Ordering[FilePattern] = Ordering.by {
-      pattern: FilePattern => (pattern.strength, pattern.typeFormat)
+      pattern: FilePattern => (pattern.category, -pattern.typeFormat.length, pattern.typeFormat)
     }
 
     private val filePatterns = {
       @tailrec
-      def loop(remaining: Seq[String], binary: Boolean, acc: Set[FilePattern]): Set[FilePattern] = {
+      def loop(remaining: Seq[String], category: FileCategory, acc: Set[FilePattern]): Set[FilePattern] = {
         remaining match {
-          case Seq() => acc
+          case Seq() => acc.filter(_.typeFormat.trim.nonEmpty)
           case head +: tail => head match {
-            case BinaryPatternsHeader => loop(tail, binary = true, acc)
-            case TextPatternsHeader => loop(tail, binary = false, acc)
+            case BinaryPatternsHeader =>
+              loop(tail, Binary, acc)
+            case TextPatternsHeader =>
+              loop(tail, Text, acc)
             case PatternRegex(strength, offset, typeFormat, mimeType) =>
               val maybeMimeType = Some(mimeType).filter(_.nonEmpty)
               val boundedStrength = Try(strength.toInt).getOrElse(Int.MaxValue)
-              val pattern = FilePattern(binary, boundedStrength, offset.toLong, typeFormat, maybeMimeType)
-              loop(tail, binary, acc + pattern)
-            case _ => loop(tail, binary, acc)
+              val pattern = FilePattern(category, boundedStrength, offset.toLong, typeFormat, maybeMimeType)
+              loop(tail, category, acc + pattern)
+            case _ => loop(tail, Unknown, acc)
           }
         }
       }
 
-      loop(patterns, binary = true, SortedSet.empty)
+      loop(patterns, Unknown, SortedSet.empty)
     }
 
     def matchName(name: String, details: Option[String]): FileType = {
-      val category = filePatterns.find(_.matches(name)).map(_.category).getOrElse(Unknown)
+      val pattern = filePatterns.find(_.matches(name))
+      val category = pattern.map(_.category).getOrElse(Unknown)
       FileType(category, name, details)
     }
   }
